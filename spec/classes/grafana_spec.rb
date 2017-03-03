@@ -1,15 +1,21 @@
 require 'spec_helper'
 
 describe 'grafana' do
+  # get all supported OSes from metadata.json
   on_supported_os.each do |os, facts|
+
+    # mock all facts
+    # reproducible builds
     context "on #{os}" do
       let(:facts) do
         facts
       end
 
+      # start with the basic tests
       context 'with default values' do
         it { is_expected.to compile }
         it { is_expected.to contain_anchor('grafana::begin') }
+        it { is_expected.to contain_class('grafana') }
         it { is_expected.to contain_class('grafana::params') }
         it { is_expected.to contain_class('grafana::install') }
         it { is_expected.to contain_class('grafana::config') }
@@ -18,7 +24,9 @@ describe 'grafana' do
       end
 
       context 'with parameter install_method is set to package' do
+        # check the operatingsystem
         case facts[:osfamily]
+        # do all the debian specific stuff
         when 'Debian'
           download_location = '/tmp/grafana.deb'
 
@@ -35,6 +43,7 @@ describe 'grafana' do
             it { is_expected.to contain_package('grafana').with_provider('dpkg') }
             it { is_expected.to contain_package('grafana').with_source(download_location) }
           end
+          # do all the redhat stuff
         when 'RedHat'
           describe 'install dependencies first' do
             it { is_expected.to contain_package('fontconfig').with_ensure('present').that_comes_before('Package[grafana]') }
